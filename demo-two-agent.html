@@ -116,50 +116,48 @@ const TAVILY_KEY = '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';
 let mode = 'demo';
 let companies = [];
 
-// Live transcript: read messages from widget shadow DOM
+// Live transcript: extract conversation ID from widget → fetch via ElevenLabs API
 let transcriptTimer = null;
-let lastMsgCount = 0;
+let lastMsgs = '';
 
 function startTranscriptCapture() {
-  lastMsgCount = 0;
+  lastMsgs = '';
   if (transcriptTimer) clearInterval(transcriptTimer);
-  transcriptTimer = setInterval(() => {
+  transcriptTimer = setInterval(async () => {
     const widget = document.querySelector('elevenlabs-convai');
     if (!widget) return;
     const root = widget.shadowRoot;
     if (!root) return;
-    // Find all text-bearing elements inside overlay
-    const overlay = root.querySelector('[class*="overlay"]');
-    if (!overlay) return;
-    const fullText = overlay.innerText || '';
-    if (!fullText) return;
-    // Split by lines and remove UI noise
-    const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 3);
-    const messages = lines.filter(l => 
-      !l.startsWith('Switched to') && 
-      !l.startsWith('How was this') && 
-      !l.startsWith('You ended') && 
-      !l.startsWith('ID:') && 
-      !l.startsWith('Feedback') && 
-      !l.startsWith('Talk to') &&
-      !l.startsWith('Need help') &&
-      !l.startsWith('Start a call') &&
-      !l.startsWith('Powered by')
+    // Get all visible text
+    const text = root.innerText || root.textContent || '';
+    if (text === lastMsgs) return;
+    lastMsgs = text;
+    // Parse lines
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+    // Find conversation ID
+    let convId = '';
+    for (const l of lines) {
+      const m = l.match(/ID:\s*(conv_[a-z0-9]+)/);
+      if (m) convId = m[1];
+    }
+    // Filter meaningful messages
+    const msgs = lines.filter(l => 
+      !l.startsWith('Switched') && !l.startsWith('How was') && !l.startsWith('You ended') && 
+      !l.startsWith('ID:') && !l.startsWith('Feedback') && !l.startsWith('Talk') && 
+      !l.startsWith('Need help') && !l.startsWith('Start a') && !l.startsWith('Powered by') &&
+      l !== 'Message' && l !== 'Start a call'
     );
-    if (messages.length <= lastMsgCount) return;
-    lastMsgCount = messages.length;
+    if (!msgs.length) return;
     const box = document.getElementById('chatBox');
-    // Remove placeholder
     const ph = box.querySelector('p');
     if (ph && ph.style.padding) ph.remove();
-    // Clear old and re-render all
     box.innerHTML = '';
-    messages.forEach((text, i) => {
+    msgs.forEach((msg, i) => {
       const isAI = i % 2 === 0;
       const speaker = isAI ? 'AI Caller' : 'You (Sales Rep)';
       const cls = isAI ? 'caller' : 'customer';
       const d = document.createElement('div'); d.className = 'message';
-      d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isAI?'♂':'♀')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(text)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+      d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isAI?'♂':'♀')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(msg)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
       box.appendChild(d);
     });
     box.scrollTop = box.scrollHeight;
