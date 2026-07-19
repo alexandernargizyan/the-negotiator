@@ -119,45 +119,52 @@ let companies = [];
 // Capture ElevenLabs widget transcript by monitoring shadow DOM
 let pollTimer = null;
 let seenTexts = new Set();
+let lastMsgHtml = '';
 
 function startTranscriptCapture() {
   seenTexts = new Set();
+  lastMsgHtml = '';
   if (pollTimer) clearInterval(pollTimer);
-  // Poll widget shadow DOM for new text every 800ms
   pollTimer = setInterval(() => {
     const widget = document.querySelector('elevenlabs-convai');
     if (!widget) return;
     const root = widget.shadowRoot;
     if (!root) return;
-    // Get all text nodes from the shadow DOM
-    const allText = root.innerText || root.textContent || '';
-    if (!allText) return;
-    const lines = allText.split('\n').map(l => l.trim()).filter(l => l.length > 3);
-    const box = document.getElementById('chatBox');
-    for (const line of lines) {
-      const key = btoa(line).slice(-30);
+    // Find message container
+    const container = root.querySelector('[class*="flex-col gap-6"]');
+    if (!container) return;
+    const currentHtml = container.innerHTML;
+    if (currentHtml === lastMsgHtml) return;
+    lastMsgHtml = currentHtml;
+    // Extract all text nodes from direct child divs (each message)
+    const msgs = container.children;
+    for (let i = 0; i < msgs.length; i++) {
+      const el = msgs[i];
+      const text = el.innerText?.trim();
+      if (!text || text.length < 3) continue;
+      // Skip UI text
+      if (text.startsWith('Switched to') || text.startsWith('How was this') || text.startsWith('You ended') || text.startsWith('ID:') || text.startsWith('Feedback')) continue;
+      const key = btoa(text).replace(/[+/=]/g,'').slice(-28);
       if (seenTexts.has(key)) continue;
       seenTexts.add(key);
-      // Skip UI text (buttons, timestamps, etc)
-      if (/^\d{1,2}:\d{2}/.test(line)) continue;
-      if (line === 'Feedback' || line === 'New chat' || line.startsWith('elevenlabs')) continue;
-      // Determine who spoke — if line matches known agent phrases it's AI
-      const isAI = seenTexts.size % 2 === 1; // alternate: AI speaks first
+      const isAI = !el.querySelector('[class*="user"]') && !text.startsWith('User:');
       const speaker = isAI ? 'AI Caller' : 'You (Sales Rep)';
       const cls = isAI ? 'caller' : 'customer';
+      const box = document.getElementById('chatBox');
       const d = document.createElement('div'); d.className = 'message';
-      d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isAI?'♂':'♀')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(line)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+      d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isAI?'♂':'♀')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(text)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
       const placeholder = box.querySelector('p');
       if (placeholder && placeholder.style.padding) box.insertBefore(d, placeholder);
       else box.appendChild(d);
       box.scrollTop = box.scrollHeight;
     }
-  }, 800);
+  }, 1000);
 }
 
 function stopTranscriptCapture() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   seenTexts = new Set();
+  lastMsgHtml = '';
 }
 
 function escHtml(s) {
