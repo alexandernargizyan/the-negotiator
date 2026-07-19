@@ -125,30 +125,36 @@ let displayedTurns = new Set();
 function startTranscriptCapture() {
   watchedConvId = ''; displayedTurns = new Set();
   if (apiTimer) clearInterval(apiTimer);
+  console.log('[Transcript] Watching for conv ID...');
   const idWatch = setInterval(() => {
     try {
       const root = document.querySelector('elevenlabs-convai')?.shadowRoot;
-      if (!root) return;
+      if (!root) { console.log('[Transcript] No shadow root yet'); return; }
       const t = (root.children[2]?.textContent || root.textContent || '');
+      console.log('[Transcript] shadow text:', t.substring(0, 100));
       const m = t.match(/conv_[a-z0-9]+/);
       if (m && m[0] !== watchedConvId) {
         watchedConvId = m[0]; clearInterval(idWatch);
+        console.log('[Transcript] Found conv ID:', watchedConvId);
         apiTimer = setInterval(pollTranscript, 2000);
         pollTranscript();
       }
-    } catch(e) {}
+    } catch(e) { console.log('[Transcript] ID watch error:', e.message); }
   }, 1000);
 }
 
 async function pollTranscript() {
-  if (!watchedConvId) return;
+  if (!watchedConvId) { console.log('[Transcript] No conv ID yet'); return; }
+  console.log('[Transcript] Polling API for', watchedConvId);
   try {
     const resp = await fetch('https://api.elevenlabs.io/v1/convai/conversations/' + watchedConvId, {
       headers: {'xi-api-key': ELEVEN_KEY}
     });
+    console.log('[Transcript] API response:', resp.status);
     if (!resp.ok) return;
     const data = await resp.json();
     const turns = data.transcript || [];
+    console.log('[Transcript] Got', turns.length, 'turns');
     const box = document.getElementById('chatBox');
     const ph = box.querySelector('p');
     if (ph && ph.style.padding) ph.remove();
