@@ -116,56 +116,79 @@ const TAVILY_KEY = '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';
 let mode = 'demo';
 let companies = [];
 
-// Live transcript: extract conversation ID from widget → fetch via ElevenLabs API
-let transcriptTimer = null;
-let lastMsgs = '';
+// Live transcript: listen for ElevenLabs widget postMessage events
+let transcriptListenerActive = false;
 
 function startTranscriptCapture() {
-  lastMsgs = '';
-  if (transcriptTimer) clearInterval(transcriptTimer);
-  transcriptTimer = setInterval(async () => {
-    const widget = document.querySelector('elevenlabs-convai');
-    if (!widget) return;
-    const root = widget.shadowRoot;
-    if (!root) return;
-    // Get all visible text
-    const text = root.innerText || root.textContent || '';
-    if (text === lastMsgs) return;
-    lastMsgs = text;
-    // Parse lines
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-    // Find conversation ID
-    let convId = '';
-    for (const l of lines) {
-      const m = l.match(/ID:\s*(conv_[a-z0-9]+)/);
-      if (m) convId = m[1];
-    }
-    // Filter meaningful messages
-    const msgs = lines.filter(l => 
-      !l.startsWith('Switched') && !l.startsWith('How was') && !l.startsWith('You ended') && 
-      !l.startsWith('ID:') && !l.startsWith('Feedback') && !l.startsWith('Talk') && 
-      !l.startsWith('Need help') && !l.startsWith('Start a') && !l.startsWith('Powered by') &&
-      l !== 'Message' && l !== 'Start a call'
-    );
-    if (!msgs.length) return;
-    const box = document.getElementById('chatBox');
-    const ph = box.querySelector('p');
-    if (ph && ph.style.padding) ph.remove();
-    box.innerHTML = '';
-    msgs.forEach((msg, i) => {
-      const isAI = i % 2 === 0;
-      const speaker = isAI ? 'AI Caller' : 'You (Sales Rep)';
-      const cls = isAI ? 'caller' : 'customer';
-      const d = document.createElement('div'); d.className = 'message';
-      d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isAI?'♂':'♀')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(msg)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
-      box.appendChild(d);
+  if (transcriptListenerActive) return;
+  transcriptListenerActive = true;
+  
+  // ElevenLabs widget sends postMessage events we can intercept
+  window.addEventListener('message', (event) => {
+    try {
+      const data = event.data;
+      // The widget sends text content via postMessage
+      if (data && typeof data === 'object' && data.type === 'elevenlabs-conversation-message') {
+        const text = data.text || data.content || data.message || '';
+        if (!text || text.length < 3) return;
+        const isUser = data.role === 'user' || data.speaker === 'user';
+        addTranscriptLine(text, isUser);
+      }
+      // Also catch conversation ID
+      if (data && typeof data === 'object' && data.type === 'elevenlabs-conversation-id') {
+        window._convId = data.conversationId || data.id;
+      }
+    } catch(e) { /* ignore cross-origin message errors */ }
+  });
+  
+  // Fallback: also check widget element attributes for conversation-id
+  const widget = document.querySelector('elevenlabs-convai');
+  if (widget) {
+    // Watch for attribute changes on the custom element
+    const attrObserver = new MutationObserver(() => {
+      const convId = widget.getAttribute('conversation-id') || widget.getAttribute('data-conversation-id') || '';
+      if (convId && convId !== '') window._convId = convId;
+      
+      // Try reading shadow DOM as fallback
+      try {
+        const root = widget.shadowRoot;
+        if (!root) return;
+        // Look for any text in the "sheet" divs
+        const allText = root.querySelectorAll('[class*="sheet"] div, [class*="sheet"] p, [class*="sheet"] span');
+        allText.forEach(el => {
+          const t = (el.textContent || '').trim();
+          if (!t || t.length < 3) return;
+          if (t.startsWith(':') || t.startsWith('--') || t === 'Powered by' || 
+              t.startsWith('How was') || t.startsWith('You ended') || t.startsWith('Talk to') ||
+              t.startsWith('Need help') || t.startsWith('Start a')) return;
+          // Check if we already have this text
+          const key = btoa(t).replace(/[+/=]/g,'').slice(-24);
+          if (window._seenTranscripts?.has(key)) return;
+          if (!window._seenTranscripts) window._seenTranscripts = new Set();
+          window._seenTranscripts.add(key);
+          addTranscriptLine(t, el.closest('[class*="user"]') !== null);
+        });
+      } catch(e) { /* swallow shadow DOM errors */ }
     });
-    box.scrollTop = box.scrollHeight;
-  }, 1500);
+    attrObserver.observe(widget, { attributes: true, childList: false, subtree: false });
+  }
+}
+
+function addTranscriptLine(text, isUser) {
+  const box = document.getElementById('chatBox');
+  const ph = box.querySelector('p');
+  if (ph && ph.style.padding) ph.remove();
+  
+  const speaker = isUser ? 'You (Sales Rep)' : 'AI Caller';
+  const cls = isUser ? 'customer' : 'caller';
+  const d = document.createElement('div'); d.className = 'message';
+  d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isUser?'♀':'♂')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(text)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
 }
 
 function stopTranscriptCapture() {
-  if (transcriptTimer) { clearInterval(transcriptTimer); transcriptTimer = null; }
+  transcriptListenerActive = false;
 }
 
 function escHtml(s) {
