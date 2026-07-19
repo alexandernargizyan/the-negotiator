@@ -139,7 +139,9 @@ function startTranscriptCapture() {
         if (line.startsWith('How was') || line.startsWith('You ended') || 
             line.startsWith('ID:') || line.startsWith('Talk to') ||
             line.startsWith('Need help') || line.startsWith('Powered by') ||
-            line.startsWith('Feedback') || 
+            line.startsWith('Feedback') || line.startsWith('Terms') ||
+            line.startsWith('By clicking') || line.startsWith('Agree') ||
+            line.startsWith('Consent') || line.startsWith('Privacy') ||
             line === 'Start a call' || line === 'Message') continue;
         const key = btoa(line).replace(/[+/=]/g,'').slice(-28);
         if (seenTranscripts.has(key)) continue;
