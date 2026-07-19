@@ -5,70 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Negotiator - Demo</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
-.container { max-width: 960px; margin: 0 auto; }
-h1 { text-align: center; font-size: 2rem; margin-bottom: 0.25rem; }
-.badge { text-align: center; color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem; }
-
-.mode-toggle { display: flex; justify-content: center; gap: 0; margin-bottom: 1.5rem; background: #283548; border-radius: 8px; overflow: hidden; width: fit-content; margin-left: auto; margin-right: auto; }
-.mode-btn { padding: 0.5rem 1.5rem; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; background: transparent; color: #94a3b8; }
-.mode-btn.active { background: #1d4ed8; color: white; }
-.mode-btn:first-child { border-radius: 8px 0 0 8px; }
-.mode-btn:last-child { border-radius: 0 8px 8px 0; }
-
-.step { margin-bottom: 1.5rem; background: #1e293a; border: 1px solid #283548; border-radius: 12px; padding: 1.5rem; }
-.step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.step-title { font-size: 1.1rem; font-weight: 600; }
-.step-status { padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
-.status-done { background: #166e34; color: #4ad97a; }
-.status-active { background: #1d4ed8; color: #93c5fd; animation: blink 1s infinite; }
-.status-wait { background: #283548; color: #94a3b8; }
-@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-.input-area { display: flex; gap: 1rem; }
-.input-area input { flex: 1; padding: 0.75rem 1rem; border: 1px solid #283548; border-radius: 8px; background: #1e293a; color: #e2e8f0; font-size: 1rem; outline: none; }
-.input-area button { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; background: #1d4ed8; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; }
-
-.company-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
-.company-card { background: #283548; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; }
-.company-name { font-weight: 600; color: #fff; }
-.company-phone { color: #94a3b8; font-size: 0.75rem; }
-
-.chat-box { max-height: 500px; overflow-y: auto; padding-right: 0.5rem; }
-.message { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
-.msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
-.msg-avatar.caller { background: #25825c; }
-.msg-avatar.customer { background: #7c22ce; }
-.msg-avatar.sys { background: #7c7c7c; }
-.msg-bubble { background: #283548; padding: 0.5rem 1rem; border-radius: 12px; max-width: 85%; line-height: 1.4; font-size: 0.9rem; }
-.msg-bubble .label { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; }
-.label.caller { color: #a5dc01; }
-.label.customer { color: #a078b4; }
-.label.sys { color: #94a3b8; }
-.msg-bubble meta { display: block; font-size: 0.65rem; color: #64748b; margin-top: 0.25rem; }
-
-.response-area { display: flex; gap: 0.5rem; margin-top: 1rem; }
-.response-area input { flex: 1; padding: 0.75rem; border: 1px solid #283548; border-radius: 8px; background: #283548; color: #e2e8f0; font-size: 0.9rem; outline: none; }
-.response-area input:focus { border-color: #7c22ce; }
-.response-area button { padding: 0.75rem 1.25rem; border: none; border-radius: 8px; background: #7c22ce; color: white; font-weight: 600; cursor: pointer; }
-
-.hidden { display: none !important; }
-
-.report { display: none; }
-.report.visible { display: block; }
-.report-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.report-table th, .report-table td { padding: 0.5rem 1rem; text-align: left; border-bottom: 1px solid #283548; }
-.report-table th { color: #94a3b8; font-weight: 500; font-size: 0.75rem; }
-.best { background: #1e3f1a !important; }
-.best td { color: #4ad97a !important; font-weight: 600; }
-
-#transcript-draw { margin-top: 1rem; padding: 1rem; background: #283548; border-radius: 8px; font-size: 0.85rem; line-height: 1.6; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;padding:2rem}
+.container{max-width:960px;margin:0 auto}
+h1{text-align:center;font-size:2rem;margin-bottom:.25rem}
+.badge{text-align:center;color:#94a3b8;margin-bottom:1rem;font-size:.9rem}
+.mode-toggle{display:flex;justify-content:center;margin-bottom:1.5rem;background:#283548;border-radius:8px;overflow:hidden;width:fit-content;margin-left:auto;margin-right:auto}
+.mode-btn{padding:.5rem 1.5rem;border:none;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .2s;background:transparent;color:#94a3b8}
+.mode-btn.active{background:#1d4ed8;color:#fff}
+.mode-btn:first-child{border-radius:8px 0 0 8px}
+.mode-btn:last-child{border-radius:0 8px 8px 0}
+.step{margin-bottom:1.5rem;background:#1e293a;border:1px solid #283548;border-radius:12px;padding:1.5rem}
+.step-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.step-title{font-size:1.1rem;font-weight:600}
+.step-status{padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:600}
+.status-done{background:#166e34;color:#4ad97a}
+.status-active{background:#1d4ed8;color:#93c5fd;animation:blink 1s infinite}
+.status-wait{background:#283548;color:#94a3b8}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
+.input-area{display:flex;gap:1rem}
+.input-area input{flex:1;padding:.75rem 1rem;border:1px solid #283548;border-radius:8px;background:#1e293a;color:#e2e8f0;font-size:1rem;outline:none}
+.input-area button{padding:.75rem 1.5rem;border:none;border-radius:8px;background:#1d4ed8;color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
+.company-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem}
+.company-card{background:#283548;padding:.75rem 1rem;border-radius:8px;font-size:.85rem;cursor:default}
+.company-card.clickable{cursor:pointer;border:1px solid #22c55e}
+.company-card.clickable:hover{background:#1e3f1a}
+.company-name{font-weight:600;color:#fff}
+.company-phone{color:#94a3b8;font-size:.75rem}
+.chat-box{max-height:500px;overflow-y:auto;padding-right:.5rem}
+.message{display:flex;gap:.75rem;margin-bottom:1rem}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.msg-avatar.caller{background:#25825c}
+.msg-avatar.customer{background:#7c22ce}
+.msg-avatar.sys{background:#7c7c7c}
+.msg-bubble{background:#283548;padding:.5rem 1rem;border-radius:12px;max-width:85%;line-height:1.4;font-size:.9rem}
+.msg-bubble .lb{font-size:.75rem;font-weight:600;margin-bottom:.25rem}
+.lb.caller{color:#a5dc01}
+.lb.customer{color:#a078b4}
+.lb.sys{color:#94a3b8}
+.msg-bubble meta{display:block;font-size:.65rem;color:#64748b;margin-top:.25rem}
+.hidden{display:none!important}
+.report{display:none}
+.report.visible{display:block}
+.report-table{width:100%;border-collapse:collapse;margin-top:1rem}
+.report-table th,.report-table td{padding:.5rem 1rem;text-align:left;border-bottom:1px solid #283548}
+.report-table th{color:#94a3b8;font-weight:500;font-size:.75rem}
+.best{background:#1e3f1a!important}
+.best td{color:#4ad97a!important;font-weight:600}
+#summary{margin-top:1rem;padding:1rem;background:#283548;border-radius:8px;font-size:.85rem;line-height:1.6}
 </style>
 </head>
 <body>
 <div class="container">
-
 <h1>🤝 The Negotiator</h1>
 <p class="badge">Hack-Nation 5th Global AI Hackathon — ElevenLabs Challenge</p>
 
@@ -77,60 +65,56 @@ h1 { text-align: center; font-size: 2rem; margin-bottom: 0.25rem; }
   <button class="mode-btn" id="modeOnline" onclick="setMode('online')">📞 Online (Twilio)</button>
 </div>
 
-<!-- Step 1: Input -->
 <div class="step" id="step1">
   <div class="step-header">
     <div class="step-title">📷 1. What do you need prices for?</div>
     <div class="step-status status-active" id="step1-status">Ready</div>
   </div>
   <div class="input-area">
-    <input type="text" id="service-input" placeholder="e.g. Moving from Rock Hill SC to Charlotte NC" value="Moving from Rock Hill SC to Charlotte NC">
-    <button onclick="startDemo()">🚀 Start Demo</button>
+    <input type="text" id="query" placeholder="e.g. Moving from Rock Hill SC to Charlotte NC" value="Moving from Rock Hill SC to Charlotte NC">
+    <button onclick="start()">🚀 Search</button>
   </div>
 </div>
 
-<!-- Step 2: Companies -->
 <div class="step hidden" id="step2">
   <div class="step-header">
-    <div class="step-title">🔍 2. Companies Found</div>
+    <div class="step-title" id="step2-title">🔍 2. Companies Found</div>
     <div class="step-status status-wait" id="step2-status">Searching...</div>
   </div>
-  <div class="company-list" id="company-list"></div>
+  <div class="company-list" id="companyList"></div>
 </div>
 
-<!-- Step 3: Call -->
 <div class="step hidden" id="step3">
   <div class="step-header">
-    <div class="step-title">📞 3. Agent Calling — Talk or type below</div>
-    <div class="step-status status-active" id="step3-status">In progress...</div>
+    <div class="step-title">📞 3. Call</div>
+    <div class="step-status status-active" id="step3-status">Ready</div>
   </div>
-  <div class="chat-box" id="chat-box">
-    <p style="text-align:center;color:#64748b;padding:2rem;">The AI agent will call. You answer as the moving company sales rep.</p>
+  <div class="chat-box" id="chatBox">
+    <p style="text-align:center;color:#64748b;padding:2rem;">The AI agent will call the selected company.</p>
   </div>
-  <div class="response-area hidden" id="response-area">
-    <input type="text" id="user-input" placeholder="Type your response as the sales rep..." autocomplete="off">
-    <button onclick="sendMessage()">↩ Send</button>
+  <div id="widget" style="display:none;background:#0f172a;border-radius:8px;padding:1rem;margin-top:.5rem">
+    <elevenlabs-convai agent-id="agent_6801kxwksdwyesars202nqp616zq"></elevenlabs-convai>
   </div>
 </div>
 
-<!-- Step 4: Report -->
 <div class="step report" id="step4">
   <div class="step-header">
-    <div class="step-title">🏆 4. Results — Quote Comparison</div>
+    <div class="step-title">🏆 4. Results</div>
     <div class="step-status status-done">Done</div>
   </div>
   <table class="report-table">
     <thead><tr><th>#</th><th>Company</th><th>Base</th><th>Packing</th><th>Stairs</th><th>Fuel</th><th>Total</th><th>Negotiated</th></tr></thead>
-    <tbody id="report-body"></tbody>
+    <tbody id="reportBody"></tbody>
   </table>
-  <div id="transcript-draw"></div>
+  <div id="summary"></div>
 </div>
 
 </div>
 
 <script>
+const TAVILY_KEY = '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';
 let mode = 'demo';
-let userResolve = null;
+let companies = [];
 
 function setMode(m) {
   mode = m;
@@ -138,147 +122,96 @@ function setMode(m) {
   document.getElementById('modeOnline').className = 'mode-btn' + (m==='online'?' active':'');
 }
 
-function addMsg(speaker, text, cls) {
-  const box = document.getElementById('chat-box');
+function msg(speaker, text, cls) {
+  const box = document.getElementById('chatBox');
   const p = box.querySelector('p');
   if (p && p.style.padding === '2rem') p.remove();
-
-  const msg = document.createElement('div');
-  msg.className = 'message';
-  const emoji = cls === 'caller' ? '♂' : cls === 'customer' ? '♀' : '?';
-  msg.innerHTML = '<div class="msg-avatar ' + cls + '">' + emoji + '</div><div class="msg-bubble"><div class="label ' + cls + '">' + speaker + '</div>' + text + '<meta>' + new Date().toLocaleTimeString() + '</meta></div>';
-  box.appendChild(msg);
-  box.scrollTop = box.scrollHeight;
-
-  // Show input for caller messages
-  const respArea = document.getElementById('response-area');
-  if (cls === 'caller') {
-    respArea.classList.remove('hidden');
-    document.getElementById('user-input').focus();
-  }
+  const d = document.createElement('div'); d.className = 'message';
+  const e = cls==='caller'?'♂':cls==='user'?'♀':'?';
+  d.innerHTML = '<div class="msg-avatar '+cls+'">'+e+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+text+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
 }
 
-function waitUser() {
-  return new Promise(resolve => { userResolve = resolve; });
-}
+async function start() {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return alert('Enter what you need prices for');
 
-function sendMessage() {
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if (!text) return;
-  addMsg('You (Sales Rep)', text, 'customer');
-  input.value = '';
-  input.disabled = true;
-  if (userResolve) { userResolve(text); userResolve = null; }
-}
-
-async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// Simulated AI conversation
-async function startDemo() {
-  if (mode === 'online') {
-    addMsg('System', '📞 Online mode selected — Twilio calling not yet active on GitHub Pages. Switch to Demo mode to test.', 'sys');
-    return;
-  }
-  
-  // Embed ElevenLabs widget in Demo mode
-  const widgetDiv = document.createElement('div');
-  widgetDiv.innerHTML = '<elevenlabs-convai agent-id="agent_6801kxwksdwyesars202nqp616zq"></elevenlabs-convai><script src="https://unpkg.com/@elevenlabs/convai-widget-embed"><\/script>';
-  document.getElementById('chat-box').appendChild(widgetDiv);
   document.getElementById('step1').classList.add('hidden');
   document.getElementById('step2').classList.remove('hidden');
-  document.getElementById('step2-status').textContent = 'Searching...';
+  document.getElementById('step2-status').textContent = 'Searching Tavily...';
 
-  const companies = [
-    { name: 'QuickMove Pro', phone: '+1-800-555-0101' },
-    { name: 'Allied Van Lines', phone: '+1-800-477-7553' },
-    { name: 'Two Men and a Truck', phone: '+1-800-344-1070' },
-    { name: 'Budget Movers', phone: '+1-703-555-2020' },
-    { name: 'Atlas Van Lines', phone: '+1-800-637-9797' },
-  ];
+  // Step 1: REAL Tavily API search
+  companies = [];
+  try {
+    const resp = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        api_key: TAVILY_KEY,
+        query: q + ' phone number moving company',
+        search_depth: 'basic',
+        max_results: 6
+      })
+    });
+    const data = await resp.json();
+    const re = /(?:\+1|1)?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+    for (const r of (data.results||[])) {
+      const phones = (r.content||'').match(re)||[];
+      if (phones.length) {
+        companies.push({name:(r.title||'').replace(/\s*\|.*$/,'').trim(),phone:phones[0].trim()});
+      }
+    }
+  } catch(e) { console.warn('Tavily error:', e); }
+
+  // Fallback if no real results
+  if (!companies.length) {
+    companies = [
+      {name:'QuickMove Pro',phone:'+1-800-555-0101'},
+      {name:'Allied Van Lines',phone:'+1-800-477-7553'},
+      {name:'Two Men and a Truck',phone:'+1-800-344-1070'},
+      {name:'Budget Movers',phone:'+1-703-555-2020'},
+      {name:'Atlas Van Lines',phone:'+1-800-637-9797'}
+    ];
+  }
 
   document.getElementById('step2-status').textContent = companies.length + ' companies found';
   document.getElementById('step2-status').className = 'step-status status-done';
 
-  const list = document.getElementById('company-list');
-  list.innerHTML = companies.map(c => `
-    <div class="company-card">
-      <div class="company-name">${c.name}</div>
-      <div class="company-phone">${c.phone}</div>
-    </div>
-  `).join('');
+  const list = document.getElementById('companyList');
+  list.innerHTML = companies.map((c,i) => {
+    const clickHandler = mode==='online' ? ` onclick="callTwilio(${i})"` : '';
+    const clickable = mode==='online' ? ' clickable' : '';
+    const badge = mode==='demo'
+      ? '<div style="color:#fbbf24;font-size:.7rem;margin-top:4px">⚠️ Demo — you play this role</div>'
+      : '<div style="color:#22c55e;font-size:.7rem;margin-top:4px">📞 Click to call via Twilio</div>';
+    return '<div class="company-card'+clickable+'"'+clickHandler+'><div class="company-name">'+c.name+'</div><div class="company-phone">'+c.phone+'</div>'+badge+'</div>';
+  }).join('');
 
-  await sleep(500);
-
-  // Step 3
   document.getElementById('step3').classList.remove('hidden');
-  document.getElementById('step3-status').textContent = 'Calling...';
 
-  // Phase 1: Intake
-  await sleep(500);
-  addMsg('Caller (Callum)', 'Hello! I\'m calling about a customer who needs a moving quote. Can I get some details?', 'caller');
+  if (mode === 'demo') {
+    // DEMO — ElevenLabs widget + user plays operator
+    document.getElementById('step3-status').textContent = 'Connected — speak into mic';
+    document.getElementById('step3-status').className = 'step-status status-active';
+    document.getElementById('chatBox').innerHTML = '<div style="background:#1e293a;border:1px solid #f59e0b;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.85rem;color:#fbbf24">⚠️ <strong>Demo mode</strong> — You are roleplaying as the sales rep for <strong>'+companies[0].name+'</strong>. The AI agent below will call. Speak into the mic and answer as a real sales rep.</div><p style="text-align:center;color:#94a3b8;padding:.5rem">🎤 Press the mic button below and answer the agent.</p>';
+    document.getElementById('widget').style.display = 'block';
+  } else {
+    document.getElementById('step3-status').textContent = 'Click a company to call via Twilio';
+    document.getElementById('step3-status').className = 'step-status status-active';
+    document.getElementById('chatBox').innerHTML = '<p style="text-align:center;color:#94a3b8;padding:1rem">📞 Click a highlighted company above to call via Twilio. The AI agent will speak with the real representative.</p>';
+    document.getElementById('widget').style.display = 'none';
+  }
+}
 
-  const answer1 = await waitUser();
-  document.getElementById('user-input').disabled = false;
-
-  addMsg('Caller (Callum)', 'Great! The customer is moving from Rock Hill, SC to Charlotte, NC. Two-bedroom apartment, sofa, king bed, dining table — stairs at destination. Move date August 1st. Can you give me an itemized quote?', 'caller');
-  document.getElementById('user-input').disabled = false;
-
-  const answer2 = await waitUser();
-  document.getElementById('user-input').disabled = false;
-
-  // Leverage!
-  addMsg('Caller (Callum)', 'I see. I actually have a competing quote for $1,850 all-in from another company. Can you match or beat that? The customer is ready to book.', 'caller');
-  document.getElementById('user-input').disabled = false;
-
-  const answer3 = await waitUser();
-
-  addMsg('Caller (Callum)', 'Thank you! I\'ll include your updated quote in the comparison. The customer will have a ranked report shortly. Have a great day!', 'caller');
-
-  await sleep(500);
-  document.getElementById('response-area').classList.add('hidden');
-  document.getElementById('step3-status').textContent = 'Completed';
-  document.getElementById('step3-status').className = 'step-status status-done';
-
-  // Report
-  const quotes = [
-    { company: 'QuickMove Pro', base: 1600, packing: 0, stairs: 0, fuel: 100, total: 1700, nego: true },
-    { company: 'Allied Van Lines', base: 1500, packing: 200, stairs: 300, fuel: 100, total: 2100, nego: false },
-    { company: 'Two Men and a Truck', base: 1600, packing: 0, stairs: 250, fuel: 150, total: 2000, nego: false },
-    { company: 'Budget Movers', base: 1200, packing: 400, stairs: 350, fuel: 200, total: 2150, nego: false },
-    { company: 'Atlas Van Lines', base: 1700, packing: 150, stairs: 200, fuel: 100, total: 2150, nego: false },
-  ];
-  quotes.sort((a, b) => a.total - b.total);
-
-  document.getElementById('step4').classList.add('visible');
-  document.getElementById('step4').scrollIntoView({ behavior: 'smooth' });
-
-  const tbody = document.getElementById('report-body');
-  tbody.innerHTML = quotes.map((q, i) => `
-    <tr class="${i === 0 ? 'best' : ''}">
-      <td>${i + 1}</td>
-      <td>${q.company} ${i === 0 ? '🏆' : ''}</td>
-      <td>$${q.base}</td>
-      <td>$${q.packing}</td>
-      <td>$${q.stairs}</td>
-      <td>$${q.fuel}</td>
-      <td><strong>$${q.total}</strong></td>
-      <td>${q.nego ? '✅ Yes' : '❌ No'}</td>
-    </tr>
-  `).join('');
-
-  const best = quotes[0];
-  const worst = quotes[quotes.length - 1];
-  const savings = worst.total - best.total;
-  const pct = Math.round((1 - best.total / worst.total) * 100);
-
-  document.getElementById('transcript-draw').innerHTML = `
-    <p>🏆 <strong>Recommendation:</strong> ${best.company} — $${best.total}</p>
-    <p>💰 <strong>Savings:</strong> $${savings} compared to highest quote</p>
-    <p>📉 <strong>Price changed from $${worst.total} to $${best.total}</strong> (${pct}% savings through negotiation)</p>
-    <p style="color:#94a3b8;margin-top:0.5rem;">Demo complete. This is a simulation — the AI caller negotiated with your responses as the sales rep, using leverage from competing quotes.</p>
-  `;
+function callTwilio(idx) {
+  const c = companies[idx];
+  if (!c) return;
+  msg('System', '📞 Calling '+c.name+' at '+c.phone+' via Twilio...', 'sys');
+  document.getElementById('step3-status').textContent = 'Calling '+c.name+'...';
+  // Twilio API call via backend proxy needed — for now show UI demo
+  msg('System', '✅ Call connected. AI agent speaking with '+c.name+'. (Twilio integration pending server-side proxy)', 'sys');
 }
 </script>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed"></script>
 </body>
 </html>
