@@ -117,60 +117,90 @@ let mode = 'demo';
 let companies = [];
 
 // Capture ElevenLabs conversation transcript via API polling
+const ELEVEN_KEY = 'sk_f06da02a7765833f4202bd7ee0d25117e64680b06028c9c6';
 let pollInterval = null;
-let lastTranscriptLen = 0;
+let lastMsgCount = 0;
 
-async function fetchTranscript() {
-  // We store conversation ID when widget emits it
+function startTranscriptCapture() {
+  lastMsgCount = 0;
+  // Listen for conversation ID from widget custom event
+  const widget = document.querySelector('elevenlabs-convai');
+  if (widget) {
+    widget.addEventListener('conversation-id', (e) => {
+      window._elevenConvId = e.detail;
+      // Start polling for transcript
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(pollTranscript, 3000);
+    });
+    widget.addEventListener('conversation-message', (e) => {
+      addTranscriptMessage(e.detail);
+    });
+  }
+  // Fallback: poll the widget's iframe URL for conversation ID
+  setTimeout(() => {
+    if (!pollInterval) {
+      pollInterval = setInterval(() => {
+        const iframe = widget?.querySelector('iframe');
+        if (iframe?.src?.includes('conv_') && !window._elevenConvId) {
+          const m = iframe.src.match(/conv_([a-z0-9]+)/);
+          if (m) window._elevenConvId = 'conv_' + m[1];
+        }
+      }, 3000);
+    }
+  }, 5000);
+}
+
+function stopTranscriptCapture() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+async function pollTranscript() {
   const convId = window._elevenConvId;
   if (!convId) return;
   try {
-    const resp = await fetch('/api/fetch-transcript', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({conversation_id: convId})
+    const resp = await fetch('https://api.elevenlabs.io/v1/convai/conversations/' + convId, {
+      headers: {'xi-api-key': ELEVEN_KEY}
     });
-    // This won't work via GitHub Pages — fallback: listen to widget events
-  } catch(e) { /* ignore */ }
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (!data.transcript) return;
+    // Parse transcript lines
+    const lines = typeof data.transcript === 'string' 
+      ? data.transcript.split('\n').filter(l => l.trim())
+      : data.transcript;
+    for (const line of lines) {
+      const text = typeof line === 'string' ? line : (line.text || line.content || '');
+      if (!text || text.length < 3) continue;
+      const role = (line.role || '').toLowerCase();
+      const isUser = role === 'user' || role === 'customer' || text.startsWith('USER:') || text.startsWith('You:');
+      const txt = text.replace(/^(USER|AGENT|AI|You|Customer):\s*/i, '');
+      addTranscriptMessage({role: isUser ? 'user' : 'agent', text: txt});
+    }
+  } catch(e) { /* poll failed, will retry */ }
 }
 
-// Listen for ElevenLabs widget events on window
-let transcriptCount = 0;
-function startTranscriptCapture() {
-  transcriptCount = 0;
-  window.addEventListener('message', handleWidgetMessage);
-}
-function stopTranscriptCapture() {
-  window.removeEventListener('message', handleWidgetMessage);
-}
-
-function handleWidgetMessage(e) {
-  // Check if this is an ElevenLabs widget postMessage
-  const data = e.data;
-  if (!data || typeof data !== 'object') return;
-  
-  // ElevenLabs sends conversation_id as string
-  if (typeof data === 'string' && data.startsWith('conv_')) {
-    window._elevenConvId = data;
-    return;
-  }
-  
-  // Try to capture transcript from widget messages
-  const msg = data.text || data.message || data.transcript || '';
-  if (!msg || msg.length < 5 || transcriptCount > 30) return;
-  
-  const role = data.role || data.speaker || 'agent';
-  const speaker = role === 'user' ? 'You (Sales Rep)' : 'AI Caller';
-  const cls = role === 'user' ? 'customer' : 'caller';
-  transcriptCount++;
-  
+function addTranscriptMessage(detail) {
+  if (!detail || !detail.text) return;
+  const text = detail.text.trim();
+  if (text.length < 3) return;
   const box = document.getElementById('chatBox');
-  const id = 'tr-' + transcriptCount;
+  const id = 'el-' + btoa(text).replace(/[+/=]/g,'').slice(-24);
+  if (document.getElementById(id)) return;
+  const role = (detail.role || '').toLowerCase();
+  const isUser = role === 'user' || role === 'customer';
+  const speaker = isUser ? 'You (Sales Rep)' : 'AI Caller';
+  const cls = isUser ? 'customer' : 'caller';
   const d = document.createElement('div'); d.className = 'message'; d.id = id;
-  const e = role === 'user' ? '♀' : '♂';
-  d.innerHTML = '<div class="msg-avatar '+cls+'">'+e+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+msg+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
-  box.appendChild(d);
+  d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isUser?'♀':'♂')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(text)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+  // Insert before the last element (warning text)
+  const lastP = box.querySelector('p:last-child');
+  if (lastP && lastP.style.padding) box.insertBefore(d, lastP);
+  else box.appendChild(d);
   box.scrollTop = box.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function setMode(m) {
