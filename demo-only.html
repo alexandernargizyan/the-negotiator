@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Negotiator — Answer Call</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;padding:2rem;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{max-width:800px;width:100%;background:#1e293a;border:1px solid #283548;border-radius:16px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+h1{text-align:center;font-size:1.8rem;margin-bottom:.25rem}
+.badge{text-align:center;color:#94a3b8;font-size:.8rem;margin-bottom:1.5rem}
+.info{background:#0f172a;border-radius:8px;padding:1rem;margin-bottom:1.5rem;text-align:center;font-size:.9rem;line-height:1.6}
+.info strong{color:#93c5fd}
+.call-btn{display:block;width:100%;padding:1rem;border:none;border-radius:12px;background:#1d4ed8;color:#fff;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:1.5rem}
+.call-btn:hover{background:#1e3fa7;transform:translateY(-2px)}
+.call-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.chat{max-height:450px;overflow-y:auto;margin-bottom:1rem;padding:.5rem;display:none}
+.msg{display:flex;gap:.75rem;margin-bottom:1rem;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;font-weight:700}
+.av.c{background:#25825c}
+.av.u{background:#7c22ce}
+.av.s{background:#7c7c7c;font-size:.7rem}
+.bub{background:#283548;padding:.6rem 1rem;border-radius:12px;max-width:82%;line-height:1.5;font-size:.9rem}
+.bub .lb{font-size:.7rem;font-weight:600;margin-bottom:.2rem}
+.lb.c{color:#a5dc01}
+.lb.u{color:#a078b4}
+.lb.s{color:#94a3b8}
+.bub mt{display:block;font-size:.6rem;color:#64748b;margin-top:.25rem}
+.inp{display:flex;gap:.5rem}
+.inp input{flex:1;padding:.75rem;border:1px solid #283548;border-radius:8px;background:#283548;color:#e2e8f0;font-size:.9rem;outline:none}
+.inp input:focus{border-color:#7c22ce}
+.inp button{padding:.75rem 1.25rem;border:none;border-radius:8px;background:#7c22ce;color:#fff;font-weight:600;cursor:pointer}
+.inp{display:none}
+.report{display:none;margin-top:1.5rem}
+.report h2{text-align:center;margin-bottom:1rem;font-size:1.2rem}
+table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+th,td{padding:.5rem .75rem;text-align:left;border-bottom:1px solid #283548;font-size:.85rem}
+th{color:#94a3b8;font-weight:500;font-size:.75rem}
+tr.best{background:#1e3f1a}tr.best td{color:#4ad97a;font-weight:600}
+.summary{background:#0f172a;border-radius:8px;padding:1rem;font-size:.85rem;line-height:1.7;text-align:center}
+.summary .big{font-size:1.5rem;font-weight:700;color:#4ad97a}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🤝 The Negotiator</h1>
+  <p class="badge">Hack-Nation 5th Global AI Hackathon · ElevenLabs Challenge</p>
+  
+  <div class="info">
+    <strong>📞 Incoming call</strong> — AI agent is calling about a moving quote.<br>
+    You are the <strong>moving company sales rep</strong>. Answer the agent's questions.
+  </div>
+  
+  <button class="call-btn" id="answerBtn" onclick="answerCall()">📞 Answer Call</button>
+  
+  <div class="chat" id="chat"></div>
+  
+  <div class="inp" id="inputArea">
+    <input type="text" id="userInput" placeholder="Reply as the sales rep..." autocomplete="off" onkeydown="if(event.key==='Enter')send()">
+    <button onclick="send()">→</button>
+  </div>
+  
+  <div class="report" id="report">
+    <h2>🏆 Quote Comparison</h2>
+    <table><thead><tr><th>#</th><th>Company</th><th>Base</th><th>Packing</th><th>Stairs</th><th>Fuel</th><th>Total</th></tr></thead><tbody id="tblBody"></tbody></table>
+    <div class="summary" id="summary"></div>
+  </div>
+</div>
+
+<script>
+let resolveUser = null;
+
+function add(speaker, text, cls) {
+  const chat = document.getElementById('chat');
+  chat.style.display = 'block';
+  const m = document.createElement('div');
+  m.className = 'msg';
+  m.innerHTML = '<div class="av '+cls+'">'+(cls==='c'?'♂':cls==='u'?'♀':'?')+'</div><div class="bub"><div class="lb '+cls+'">'+speaker+'</div>'+text+'<mt>'+new Date().toLocaleTimeString()+'</mt></div>';
+  chat.appendChild(m);
+  chat.scrollTop = chat.scrollHeight;
+  if (cls==='c') {
+    document.getElementById('inputArea').style.display = 'flex';
+    document.getElementById('userInput').focus();
+  }
+}
+
+function wait() { return new Promise(r => { resolveUser = r; }); }
+
+function send() {
+  const inp = document.getElementById('userInput');
+  const t = inp.value.trim();
+  if (!t) return;
+  add('You (Sales Rep)', t, 'u');
+  inp.value = '';
+  inp.disabled = true;
+  if (resolveUser) { resolveUser(t); resolveUser = null; }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function answerCall() {
+  document.getElementById('answerBtn').disabled = true;
+  document.getElementById('answerBtn').textContent = '⏳ In call...';
+  
+  add('System', '📞 Calling QuickMove Moving Co...', 's');
+  await sleep(1000);
+  
+  add('AI Caller (Callum)', 'Hello! I\'m calling about a customer who needs a moving quote. Can you help me with that?', 'c');
+  
+  const r1 = await wait();
+  document.getElementById('userInput').disabled = false;
+  
+  add('AI Caller (Callum)', 'Great! Here are the details: the customer is moving from Rock Hill, SC to Charlotte, NC. Two-bedroom apartment, sofa and king bed, stairs at destination, move date August 1st. Can you give me an itemized quote — base price, stairs fee, packing, fuel?', 'c');
+  document.getElementById('userInput').disabled = false;
+  
+  const r2 = await wait();
+  document.getElementById('userInput').disabled = false;
+  
+  add('AI Caller (Callum)', 'I appreciate that. I actually have a competing quote for $1,850 all-included from another company. Can you match or beat that? If you can, I\'ll recommend you to the customer.', 'c');
+  document.getElementById('userInput').disabled = false;
+  
+  const r3 = await wait();
+  
+  add('AI Caller (Callum)', 'Perfect, thank you! I will include your offer in the comparison report. The customer will see all quotes ranked by price. Have a great day!', 'c');
+  
+  await sleep(800);
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('answerBtn').textContent = '✅ Call ended — see results below';
+  
+  // Generate report
+  const quotes = [
+    {co:'QuickMove Pro', b:1600, p:0, s:0, f:100, t:1700, nego:'✅ Yes'},
+    {co:'Allied Van Lines', b:1500, p:200, s:300, f:100, t:2100, nego:'❌ No'},
+    {co:'Two Men and a Truck', b:1600, p:0, s:250, f:150, t:2000, nego:'❌ No'},
+    {co:'Budget Movers', b:1200, p:400, s:350, f:200, t:2150, nego:'❌ No'},
+    {co:'Atlas Van Lines', b:1700, p:150, s:200, f:100, t:2150, nego:'❌ No'},
+  ];
+  quotes.sort((a,b)=>a.t-b.t);
+  
+  document.getElementById('report').style.display = 'block';
+  const body = document.getElementById('tblBody');
+  body.innerHTML = quotes.map((q,i)=>'<tr class="'+(i===0?'best':'')+'"><td>'+(i+1)+'</td><td>'+q.co+(i===0?' 🏆':'')+'</td><td>$'+q.b+'</td><td>$'+q.p+'</td><td>$'+q.s+'</td><td>$'+q.f+'</td><td><strong>$'+q.t+'</strong></td></tr>').join('');
+  
+  const best=quotes[0], worst=quotes[quotes.length-1];
+  document.getElementById('summary').innerHTML = `
+    <p>🏆 <strong>Best deal:</strong> ${best.co} — <span class="big">$${best.t}</span></p>
+    <p>📉 <strong>Price range:</strong> $${best.t} – $${worst.t}</p>
+    <p>💰 <strong>Savings vs highest:</strong> $${worst.t-best.t} (${Math.round((1-best.t/worst.t)*100)}%)</p>
+    <p style="color:#94a3b8;margin-top:.5rem;font-size:.8rem;">The AI agent called, you answered as the sales rep, and price changed due to competing leverage.</p>
+  `;
+  document.getElementById('report').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
