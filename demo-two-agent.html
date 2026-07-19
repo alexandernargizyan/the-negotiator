@@ -116,6 +116,63 @@ const TAVILY_KEY = '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';
 let mode = 'demo';
 let companies = [];
 
+// Capture ElevenLabs conversation transcript via API polling
+let pollInterval = null;
+let lastTranscriptLen = 0;
+
+async function fetchTranscript() {
+  // We store conversation ID when widget emits it
+  const convId = window._elevenConvId;
+  if (!convId) return;
+  try {
+    const resp = await fetch('/api/fetch-transcript', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({conversation_id: convId})
+    });
+    // This won't work via GitHub Pages — fallback: listen to widget events
+  } catch(e) { /* ignore */ }
+}
+
+// Listen for ElevenLabs widget events on window
+let transcriptCount = 0;
+function startTranscriptCapture() {
+  transcriptCount = 0;
+  window.addEventListener('message', handleWidgetMessage);
+}
+function stopTranscriptCapture() {
+  window.removeEventListener('message', handleWidgetMessage);
+}
+
+function handleWidgetMessage(e) {
+  // Check if this is an ElevenLabs widget postMessage
+  const data = e.data;
+  if (!data || typeof data !== 'object') return;
+  
+  // ElevenLabs sends conversation_id as string
+  if (typeof data === 'string' && data.startsWith('conv_')) {
+    window._elevenConvId = data;
+    return;
+  }
+  
+  // Try to capture transcript from widget messages
+  const msg = data.text || data.message || data.transcript || '';
+  if (!msg || msg.length < 5 || transcriptCount > 30) return;
+  
+  const role = data.role || data.speaker || 'agent';
+  const speaker = role === 'user' ? 'You (Sales Rep)' : 'AI Caller';
+  const cls = role === 'user' ? 'customer' : 'caller';
+  transcriptCount++;
+  
+  const box = document.getElementById('chatBox');
+  const id = 'tr-' + transcriptCount;
+  const d = document.createElement('div'); d.className = 'message'; d.id = id;
+  const e = role === 'user' ? '♀' : '♂';
+  d.innerHTML = '<div class="msg-avatar '+cls+'">'+e+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+msg+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
 function setMode(m) {
   mode = m;
   document.getElementById('modeDemo').className = 'mode-btn' + (m==='demo'?' active':'');
@@ -195,6 +252,15 @@ async function start() {
     document.getElementById('step3-status').className = 'step-status status-active';
     document.getElementById('chatBox').innerHTML = '<div style="background:#1e293a;border:1px solid #f59e0b;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.85rem;color:#fbbf24">⚠️ <strong>Demo mode</strong> — You are roleplaying as the sales rep for <strong>'+companies[0].name+'</strong>. The AI agent below will call. Speak into the mic and answer as a real sales rep.</div><p style="text-align:center;color:#94a3b8;padding:.5rem">🎤 Press the mic button below and answer the agent.</p>';
     document.getElementById('widget').style.display = 'block';
+    startTranscriptCapture();
+    // Also hide the poll warning and clear old messages
+    setTimeout(() => {
+      const box = document.getElementById('chatBox');
+      const p = box.querySelector('p');
+      if (p && p.textContent.includes('Press the mic')) {
+        p.textContent = '🎙️ Transcript will appear here as you speak...';
+      }
+    }, 2000);
   } else {
     document.getElementById('step3-status').textContent = 'Click a company to call via Twilio';
     document.getElementById('step3-status').className = 'step-status status-active';
