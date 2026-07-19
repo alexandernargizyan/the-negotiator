@@ -116,55 +116,58 @@ const TAVILY_KEY = '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';
 let mode = 'demo';
 let companies = [];
 
-// Capture ElevenLabs widget transcript by monitoring shadow DOM
-let pollTimer = null;
-let seenTexts = new Set();
-let lastMsgHtml = '';
+// Live transcript: read messages from widget shadow DOM
+let transcriptTimer = null;
+let lastMsgCount = 0;
 
 function startTranscriptCapture() {
-  seenTexts = new Set();
-  lastMsgHtml = '';
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => {
+  lastMsgCount = 0;
+  if (transcriptTimer) clearInterval(transcriptTimer);
+  transcriptTimer = setInterval(() => {
     const widget = document.querySelector('elevenlabs-convai');
     if (!widget) return;
     const root = widget.shadowRoot;
     if (!root) return;
-    // Find message container
-    const container = root.querySelector('[class*="flex-col gap-6"]');
-    if (!container) return;
-    const currentHtml = container.innerHTML;
-    if (currentHtml === lastMsgHtml) return;
-    lastMsgHtml = currentHtml;
-    // Extract all text nodes from direct child divs (each message)
-    const msgs = container.children;
-    for (let i = 0; i < msgs.length; i++) {
-      const el = msgs[i];
-      const text = el.innerText?.trim();
-      if (!text || text.length < 3) continue;
-      // Skip UI text
-      if (text.startsWith('Switched to') || text.startsWith('How was this') || text.startsWith('You ended') || text.startsWith('ID:') || text.startsWith('Feedback')) continue;
-      const key = btoa(text).replace(/[+/=]/g,'').slice(-28);
-      if (seenTexts.has(key)) continue;
-      seenTexts.add(key);
-      const isAI = !el.querySelector('[class*="user"]') && !text.startsWith('User:');
+    // Find all text-bearing elements inside overlay
+    const overlay = root.querySelector('[class*="overlay"]');
+    if (!overlay) return;
+    const fullText = overlay.innerText || '';
+    if (!fullText) return;
+    // Split by lines and remove UI noise
+    const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 3);
+    const messages = lines.filter(l => 
+      !l.startsWith('Switched to') && 
+      !l.startsWith('How was this') && 
+      !l.startsWith('You ended') && 
+      !l.startsWith('ID:') && 
+      !l.startsWith('Feedback') && 
+      !l.startsWith('Talk to') &&
+      !l.startsWith('Need help') &&
+      !l.startsWith('Start a call') &&
+      !l.startsWith('Powered by')
+    );
+    if (messages.length <= lastMsgCount) return;
+    lastMsgCount = messages.length;
+    const box = document.getElementById('chatBox');
+    // Remove placeholder
+    const ph = box.querySelector('p');
+    if (ph && ph.style.padding) ph.remove();
+    // Clear old and re-render all
+    box.innerHTML = '';
+    messages.forEach((text, i) => {
+      const isAI = i % 2 === 0;
       const speaker = isAI ? 'AI Caller' : 'You (Sales Rep)';
       const cls = isAI ? 'caller' : 'customer';
-      const box = document.getElementById('chatBox');
       const d = document.createElement('div'); d.className = 'message';
       d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isAI?'♂':'♀')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(text)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
-      const placeholder = box.querySelector('p');
-      if (placeholder && placeholder.style.padding) box.insertBefore(d, placeholder);
-      else box.appendChild(d);
-      box.scrollTop = box.scrollHeight;
-    }
-  }, 1000);
+      box.appendChild(d);
+    });
+    box.scrollTop = box.scrollHeight;
+  }, 1500);
 }
 
 function stopTranscriptCapture() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  seenTexts = new Set();
-  lastMsgHtml = '';
+  if (transcriptTimer) { clearInterval(transcriptTimer); transcriptTimer = null; }
 }
 
 function escHtml(s) {
@@ -251,6 +254,14 @@ async function start() {
     document.getElementById('chatBox').innerHTML = '<div style="background:#1e293a;border:1px solid #f59e0b;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.85rem;color:#fbbf24">⚠️ <strong>Demo mode</strong> — You are roleplaying as the sales rep for <strong>'+companies[0].name+'</strong>. The AI agent below will call. Speak into the mic and answer as a real sales rep.</div><p style="text-align:center;color:#94a3b8;padding:.5rem">🎤 Press the mic button below and answer the agent.</p>';
     document.getElementById('widget').style.display = 'block';
     startTranscriptCapture();
+    // Also expand the widget so messages are visible
+    setTimeout(() => {
+      const root = document.querySelector('elevenlabs-convai')?.shadowRoot;
+      if (root) {
+        const expand = root.querySelector('[aria-label="Expand widget"]');
+        if (expand) expand.click();
+      }
+    }, 1000);
     // Also hide the poll warning and clear old messages
     setTimeout(() => {
       const box = document.getElementById('chatBox');
