@@ -8,8 +8,14 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
 .container { max-width: 960px; margin: 0 auto; }
-h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
-.badge { text-align: center; color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
+h1 { text-align: center; font-size: 2rem; margin-bottom: 0.25rem; }
+.badge { text-align: center; color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem; }
+
+.mode-toggle { display: flex; justify-content: center; gap: 0; margin-bottom: 1.5rem; background: #283548; border-radius: 8px; overflow: hidden; width: fit-content; margin-left: auto; margin-right: auto; }
+.mode-btn { padding: 0.5rem 1.5rem; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; background: transparent; color: #94a3b8; }
+.mode-btn.active { background: #1d4ed8; color: white; }
+.mode-btn:first-child { border-radius: 8px 0 0 8px; }
+.mode-btn:last-child { border-radius: 0 8px 8px 0; }
 
 .step { margin-bottom: 1.5rem; background: #1e293a; border: 1px solid #283548; border-radius: 12px; padding: 1.5rem; }
 .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
@@ -66,6 +72,11 @@ h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
 <h1>🤝 The Negotiator</h1>
 <p class="badge">Hack-Nation 5th Global AI Hackathon — ElevenLabs Challenge</p>
 
+<div class="mode-toggle">
+  <button class="mode-btn active" id="modeDemo" onclick="setMode('demo')">🖥️ Demo</button>
+  <button class="mode-btn" id="modeOnline" onclick="setMode('online')">📞 Online (Twilio)</button>
+</div>
+
 <!-- Step 1: Input -->
 <div class="step" id="step1">
   <div class="step-header">
@@ -90,7 +101,7 @@ h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
 <!-- Step 3: Call -->
 <div class="step hidden" id="step3">
   <div class="step-header">
-    <div class="step-title">📞 3. Calling Companies — You play the Sales Rep</div>
+    <div class="step-title">📞 3. Agent Calling — Talk or type below</div>
     <div class="step-status status-active" id="step3-status">In progress...</div>
   </div>
   <div class="chat-box" id="chat-box">
@@ -118,7 +129,14 @@ h1 { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
 </div>
 
 <script>
+let mode = 'demo';
 let userResolve = null;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeDemo').className = 'mode-btn' + (m==='demo'?' active':'');
+  document.getElementById('modeOnline').className = 'mode-btn' + (m==='online'?' active':'');
+}
 
 function addMsg(speaker, text, cls) {
   const box = document.getElementById('chat-box');
@@ -158,6 +176,15 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // Simulated AI conversation
 async function startDemo() {
+  if (mode === 'online') {
+    addMsg('System', '📞 Online mode selected — Twilio calling not yet active on GitHub Pages. Switch to Demo mode to test.', 'sys');
+    return;
+  }
+  
+  // Embed ElevenLabs widget in Demo mode
+  const widgetDiv = document.createElement('div');
+  widgetDiv.innerHTML = '<elevenlabs-convai agent-id="agent_6801kxwksdwyesars202nqp616zq"></elevenlabs-convai><script src="https://unpkg.com/@elevenlabs/convai-widget-embed"><\/script>';
+  document.getElementById('chat-box').appendChild(widgetDiv);
   document.getElementById('step1').classList.add('hidden');
   document.getElementById('step2').classList.remove('hidden');
   document.getElementById('step2-status').textContent = 'Searching...';
