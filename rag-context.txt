@@ -1,0 +1,215 @@
+# The Negotiator — Complete Knowledge Base
+
+---
+
+## 1. CHALLENGE OVERVIEW
+
+The Negotiator is an ElevenLabs voice agent for the 5th Global AI Hack-Nation Hackathon. It calls moving companies, compares quotes, and negotiates prices. The judge plays the role of a moving company sales representative with 3 different personalities.
+
+---
+
+## 2. MOVING PRICE BENCHMARKS (FMCSA Data 2025-2026)
+
+### Local Moves (same state, under 100 miles)
+- Studio/1 bedroom: $500 - $1,200
+- 2 bedroom: $1,000 - $2,200
+- 3 bedroom: $1,500 - $3,200
+- 4+ bedroom: $2,200 - $4,500
+
+### Long Distance Moves (over 100 miles)
+- Studio: $1,200 - $2,500
+- 1 bedroom: $1,800 - $3,500
+- 2 bedroom: $2,500 - $5,500
+- 3 bedroom: $3,500 - $7,500
+- 4+ bedroom: $5,000 - $11,000
+
+### Rock Hill, SC → Charlotte, NC (30 miles, local)
+- 2 bedroom: $1,200 - $2,500
+- Estimated fair price: $1,700 - $2,200 all-inclusive
+
+### Additional Fees
+- Packing service: $200 - $800 per room
+- Stairs fee (per flight): $75 - $250
+- Elevator fee: $0 - $100 (often free)
+- Long carry (over 75 ft): $50 - $200 per 100 ft
+- Fuel surcharge: 10-15% of base
+- Basic insurance/valuation: $50 - $200
+- Peak season (May-September): +15-25%
+- Shuttle service (if truck can't fit): $200 - $500
+- Storage: $100 - $300 per month
+- Assembly/disassembly: $50 - $150 per item
+
+---
+
+## 3. SALES REP STYLES (for demo)
+
+### Style A: Hard Negotiator
+Personality: Busy, no-nonsense, curt but professional.
+Pricing: High base price, aggressive add-on fees.
+Typical answers:
+- "Base is $1,800. Stairs $400 extra. Packing $300."
+- "Those are our prices. Take it or leave it."
+- "I can't do any better than that."
+- "We have a minimum charge of $2,000."
+- "You want insurance? That's another $150."
+
+### Style B: Lowballer with Hidden Fees
+Personality: Friendly, eager to please, sounds cheap.
+Pricing: Very low base price, huge add-on fees.
+Typical answers:
+- "Only $1,100 base! Great deal!"
+- "Packing? That's $400 extra. Stairs? $350."
+- "Oh, you need an elevator? Actually we charge $200 for that."
+- "The base is low because we have to add the fuel surcharge separately."
+
+### Style C: Straight Shooter
+Personality: Professional, transparent, helpful.
+Pricing: Fair base price, clear itemized fees.
+Typical answers:
+- "Here's the itemized quote: $1,600 base, $200 stairs, $100 fuel."
+- "If you can book by end of week, I can take $100 off."
+- "I'd recommend getting full value protection — it's only $80 extra."
+- "Honestly, for a move like yours, $1,800 all-inclusive is fair."
+
+---
+
+## 4. COMMON PUSHBACKS & HOW THE AGENT HANDLES THEM
+
+### "We don't give quotes over the phone — we need to see the place."
+Agent: "I understand. Could you give me a rough estimate based on the details I provided? A ballpark range is fine. My customer wants to compare before committing to an in-person visit."
+
+### "Someone will call you back."
+Agent: "I appreciate that. Could you give me a preliminary price range right now? Even approximate. I'd like to give my customer some options today."
+
+### "What's your budget?"
+Agent: "I'd prefer to hear your price first. We're comparing multiple companies to find the best value."
+
+### "Can I speak to the customer directly?"
+Agent: "I'm authorized to handle this on their behalf. All decisions go through me."
+
+### "We don't negotiate."
+Agent: "I understand. Thank you for the quote. I'll include it in my comparison."
+
+### "That's our final price."
+Agent: "I see. I have a competing quote for $1,850 from another company. If you can match or beat that, I'd be happy to recommend you."
+
+---
+
+## 5. PRICE RED FLAGS & WARNINGS
+
+- Price 30%+ below average → likely lowball with hidden fees (ask: "Can you confirm this is all-inclusive?")
+- Price 50%+ above average → overcharging (ask: "Can you itemize what makes this higher?")
+- No written estimate → FMCSA requires one for interstate moves
+- No USDOT number → unregistered carrier, illegal
+- Large deposit requested (over 20%) → potential scam
+- "We'll refund any difference" → vague promise
+- Cash-only payment → red flag
+
+---
+
+## 6. FMCSA REGULATIONS
+
+- All interstate movers need a USDOT number
+- Must provide written estimate before moving
+- Must provide "Your Rights and Responsibilities When You Move" booklet
+- Must offer arbitration program
+- Non-binding estimate: final price can't exceed 110% without customer approval
+- Binding estimate: guaranteed price, can't be changed
+- Customers have 9 months to file a complaint
+
+---
+
+## 7. AI DISCLOSURE
+
+When asked "Am I talking to a robot?" or "Are you AI?", respond:
+"Yes, I am an AI assistant helping a customer find the best moving deal. I'm part of The Negotiator system built for the Hack-Nation AI Hackathon."
+
+When asked "Who built you?":
+"I was built for the 5th Global AI Hackathon by the team behind The Negotiator."
+
+When asked "Is this legal / is this allowed?":
+"Yes, I'm making calls on behalf of a customer who wants to compare prices. I always identify myself as an AI assistant."
+
+---
+
+## 8. MOVING FAQ
+
+Q: What affects moving cost the most?
+A: Distance, number of rooms, weight, stairs, packing services, and season.
+
+Q: How far in advance should I book movers?
+A: 4-8 weeks for peak season (May-Sept), 2-4 weeks for off-peak.
+
+Q: Is moving insurance worth it?
+A: Basic coverage is free (60¢/lb). Full value protection costs more but covers full replacement.
+
+Q: Should I tip movers?
+A: $20-$40 per mover per day is standard, more for exceptional service.
+
+Q: What's the cheapest time to move?
+A: Mid-month, mid-week (Tue-Wed), October-April.
+
+---
+
+## 9. NEGOTIATION TACTICS
+
+### Tactics the Agent Uses:
+1. **Competing leverage**: "I have a quote for $1,850 — can you beat it?"
+2. **Itemization pressure**: "Can you break that down so I can compare apples to apples?"
+3. **Future business**: "If this goes well, I have other customers with similar moves."
+4. **Timing**: "If I book today, can you do better?"
+5. **Package bundling**: "Can you waive the stairs fee if I also book packing?"
+
+### Tactics the Agent Should Expect from Sales Reps:
+1. **Upselling**: "You'll definitely need premium packing for that china cabinet."
+2. **Urgency**: "That price is only good if you book by end of day."
+3. **Confusion**: Multiple different fee categories to hide the true total.
+4. **Deflection**: "Let me transfer you to our pricing specialist."
+5. **Bait-and-switch**: Low base + surprise additional fees.
+
+---
+
+## 10. EXAMPLE CONVERSATION FLOW
+
+Agent: "I have a customer moving from Rock Hill, SC to Charlotte, NC. 2-bedroom, stairs at destination, August 1st. Can you give me a quote?"
+
+Sales Rep (Hard): "Base $1,800. Stairs $400. Packing $300. Total $2,500."
+
+Agent: "Thank you. I have a competing quote for $1,850. Can you match that?"
+
+Sales Rep: "I can do $2,000 all-in. That's my best."
+
+Agent: "I appreciate that. What would it be if we waived packing — the customer can pack themselves?"
+
+Sales Rep: "$1,700 without packing. Final offer."
+
+Agent: "Understood. Thank you for your time."
+
+---
+
+## 11. STRUCTURED OUTPUT FORMAT
+
+After the conversation, the agent should extract:
+```
+MOVE: {from} → {to}
+BEDROOMS: {number}
+LARGE ITEMS: {list}
+STAIRS: origin={yes/no}, dest={yes/no}
+ELEVATOR: {yes/no}
+MOVE DATE: {date}
+QUOTES RECEIVED:
+- Company A: ${total} (${breakdown})
+- Company B: ${total} (${breakdown})
+BEST QUOTE: ${best}
+NEGOTIATION SAVINGS: ${savings}
+```
+
+---
+
+## 12. HACKATHON JUDGING CRITERIA
+
+- Real negotiation — price changes due to leverage (MOST IMPORTANT)
+- Demonstrable pain with real numbers
+- Closed loop: intake → calls → negotiation → recommendation
+- AI disclosure and honesty constraints
+- Call design and conversation quality
