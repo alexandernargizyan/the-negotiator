@@ -1,0 +1,15 @@
+{
+  "name": "negotiator-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Negotiator — ElevenLabs hackathon prototype",
+  "scripts": {
+    "start": "node src/index.js",
+    "demo": "node src/demo.js"
+  },
+  "dependencies": {
+    "openai": "^4.0.0",
+    "dotenv": "^16.4.0"
+  }
+}
