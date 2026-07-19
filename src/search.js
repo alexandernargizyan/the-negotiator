@@ -5,17 +5,22 @@ import 'dotenv/config';
  * Search module — finds moving companies via Tavily + Google Places
  */
 
+// Twilio credentials — set in .env
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+
 /**
  * Find moving companies for a given route
  * @param {string} fromLocation - Pickup city/state
  * @param {string} toLocation - Delivery city/state
  * @param {object} [options]
  * @param {number} [options.maxResults=8]
+ * @param {string} [options.apiKey] - Override Tavily API key
  * @returns {Promise<Array<{name:string, phone:string, rating:number, reviews:number, address:string}>>}
  */
 export async function findMovingCompanies(fromLocation, toLocation, options = {}) {
   const maxResults = options.maxResults || 8;
-  const apiKey = process.env.TAVILY_API_KEY;
+  const apiKey = options.apiKey || process.env.TAVILY_API_KEY;
   if (!apiKey) throw new Error('TAVILY_API_KEY not set');
 
   const query = `movers "${fromLocation}" to "${toLocation}" phone number moving company`;
