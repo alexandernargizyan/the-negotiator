@@ -5,17 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Negotiator — Demo</title>
   <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
     h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
     p { color: #94a3b8; margin-bottom: 1.5rem; max-width: 500px; text-align: center; }
     .badge { background: #1d4ed8; color: white; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; margin-top: 2rem; }
+    .desc { font-size: 0.85rem; color: #64748b; max-width: 500px; text-align: center; margin-top: 1rem; }
   </style>
 </head>
 <body>
   <h1>🤝 The Negotiator</h1>
-  <p>AI voice agent for moving price comparison. Say <strong>"Hello"</strong> to start.</p>
+  <p>AI voice agent for moving price comparison.<br>Say <strong>"Hello"</strong> or press the mic to start.</p>
+  
   <elevenlabs-convai agent-id="agent_6801kxwksdwyesars202nqp616zq"></elevenlabs-convai>
   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed"></script>
+  
+  <div class="desc">
+    <strong>Demo flow:</strong> Agent calls → you roleplay as sales rep (hard / lowball / straight) → agent negotiates → report compares quotes & shows savings.
+  </div>
   <div class="badge">Hack-Nation 5th Global AI Hackathon · ElevenLabs Challenge</div>
 </body>
 </html>
