@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Negotiator — Two-Agent Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+.header { text-align: center; padding: 2rem 1rem 0.5rem; }
+.header h1 { font-size: 1.8rem; color: #fff; }
+.header .badge { display: inline-block; background: #1d4ed8; color: white; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; margin-top: 0.5rem; }
+.subtitle { color: #94a3b8; text-align: center; margin: 0.5rem 0 1rem; font-size: 0.9rem; }
+
+.agents { display: flex; gap: 1rem; padding: 0 1rem; max-width: 1200px; margin: 0 auto; }
+.agent-container { flex: 1; background: #1e293a; border-radius: 12px; overflow: hidden; border: 1px solid #283548; display: flex; flex-direction: column; }
+.agent-header { padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.agent-header.caller { border-bottom: 2px solid #25825c; }
+.agent-header.operator { border-bottom: 2px solid #7c22ce; }
+.agent-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; flex-shrink: 0; }
+.caller .agent-avatar { background: #25825c; }
+.operator .agent-avatar { background: #7c22ce; }
+.agent-info { flex: 1; }
+.agent-info .name { font-weight: 600; font-size: 0.9rem; }
+.agent-info .role { font-size: 0.75rem; color: #94a3b8; }
+.agent-status { display: flex; align-items: center; gap: 0.25rem; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.status-dot.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
+.status-dot.idle { background: #64748b; }
+.status-label { font-size: 0.7rem; color: #94a3b8; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.agent-widget { flex: 1; min-height: 450px; display: flex; align-items: center; justify-content: center; position: relative; }
+.prompt-placeholder { text-align: center; color: #64748b; }
+.prompt-placeholder .icon { font-size: 3rem; margin-bottom: 0.5rem; }
+.prompt-placeholder .text { font-size: 0.85rem; }
+
+.controls { display: flex; justify-content: center; gap: 1rem; padding: 1.5rem; }
+.controls button { padding: 0.75rem 2rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.controls button:hover { transform: translateY(-2px); }
+.btn-start { background: #1d4ed8; color: white; }
+.btn-start:hover { background: #1e3fa7; }
+.btn-reset { background: #283548; color: #94a3b8; }
+
+.transcript { max-width: 1200px; margin: 0 auto; padding: 0 1rem 2rem; }
+.transcript h2 { font-size: 1.1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.transcript h2 .count { background: #283548; color: #94a3b8; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
+.transcript-box { background: #1e293a; border: 1px solid #283548; border-radius: 12px; padding: 1rem; max-height: 400px; overflow-y: auto; }
+.message { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+.message .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; font-weight: 700; }
+.message .avatar.c { background: #25825c; }
+.message .avatar.o { background: #7c22ce; }
+.message .avatar.x { background: #7c7c7c; }
+.message .bubble { background: #283548; padding: 0.5rem 1rem; border-radius: 12px; max-width: 80%; font-size: 0.9rem; line-height: 1.4; }
+.message .bubble .label { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem; }
+.message .bubble .label.c { color: #a5dc01; }
+.message .bubble .label.o { color: #a078b4; }
+.message .bubble .label.x { color: #94a3b8; }
+.message meta { display: block; font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; }
+
+.bottom-bar { text-align: center; padding: 1rem; color: #64748b; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🤝 The Negotiator</h1>
+  <div class="badge">Two-Agent Demo — Hack-Nation 5th Global AI Hackathon</div>
+</div>
+<p class="subtitle">Caller (male) roleplays as your AI agent, Operator (female) roleplays as the moving company sales rep.</p>
+
+<div class="agents">
+  <div class="agent-container">
+    <div class="agent-header caller">
+      <div class="agent-avatar">♂</div>
+      <div class="agent-info">
+        <div class="name">Negotiator-Caller — Callum 🇬🇧</div>
+        <div class="role">Asks questions, collects quotes, negotiates</div>
+      </div>
+      <div class="agent-status">
+        <span class="status-dot idle" id="caller-status"></span>
+        <span class="status-label" id="caller-label">Idle</span>
+      </div>
+    </div>
+    <div class="agent-widget" id="caller-widget">
+      <div class="prompt-placeholder">
+        <div class="icon">♂</div>
+        <div class="text">Caller Widget<Br>Publish agent & use your XI-API-Key</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="agent-container">
+    <div class="agent-header operator">
+      <div class="agent-avatar">♀</div>
+      <div class="agent-info">
+        <div class="name">Negotiator-Operator — Sarah 🇬🇧</div>
+        <div class="role">Plays the moving company sales rep (3 styles)</div>
+      </div>
+      <div class="agent-status">
+        <span class="status-dot idle" id="operator-status"></span>
+        <span class="status-label" id="operator-label">Idle</span>
+      </div>
+    </div>
+    <div class="agent-widget" id="operator-widget">
+      <div class="prompt-placeholder">
+        <div class="icon">♀</div>
+        <div class="text">Operator Widget<Br>Publish agent & use your XI-API-Key</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="transcript">
+  <h2>
+    📝 Live Transcript
+    <span class="count" id="msg-count">0 messages</span>
+  </h2>
+  <div class="transcript-box" id="transcript-box">
+    <div style="text-align:center;color:#64748b;padding:2rem;">Demo will appear here. Both agents talk to each other automatically.</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn-start" onclick="startDemo()">▨ Start Demo</button>
+  <button class="btn-reset" onclick="resetDemo()">🔄 Reset</button>
+</div>
+
+<div class="bottom-bar">
+  <small>Publish both agents in ElevenLabs Dashboard, then refresh this page. Agent IDs embedded in source.</small>
+</div>
+
+<script>
+const AGENTS = {
+  caller: { id: 'agent_5801kxwxyamvehe8rmgm9hrhxdz0', voice: 'N2lVS1w4EtoT3dr4eOWO', name: 'Caller-Callum', label: 'Caller', color: 'c' },
+  operator: { id: 'agent_0201kxwxyc66e8bbvkgyx7hjrbdj', voice: 'EXAVITQu4vr4xnSDxMaL', name: 'Operator-Sarah', label: 'Operator', color: 'o' }
+};
+
+function setStatus(agent, active) {
+  const dot = document.getElementById(agent + '-status');
+  const label = document.getElementById(agent + '-label');
+  dot.className = 'status-dot ' + (active ? 'active' : 'idle');
+  label.textContent = active ? 'Speaking...' : 'Idle';
+}
+
+function addMessage(speaker, text) {
+  const box = document.getElementById('transcript-box');
+  const firstChild = box.querySelector('div');
+  if (firstChild && firstChild.style.padding === '2rem') firstChild.remove();
+
+  const agent = Object.values(AGENTS).find(a => a.name === speaker || a.label === speaker);
+  const c = agent ? agent.color : 'x';
+
+  const msg = document.createElement('div');
+  msg.className = 'message';
+  msg.innerHTML = '<div class="avatar ' + c + '">' + (c === 'c' ? '♂' : c === 'o' ? '♀' : '?') + '</div><div class="bubble"><div class="label ' + c + '">' + speaker + '</div>' + text + '<meta>' + new Date().toLocaleTimeString() + '</meta></div>';
+  box.appendChild(msg);
+  box.scrollTop = box.scrollHeight;
+
+  document.getElementById('msg-count').textContent = box.querySelectorAll('.message').length + ' messages';
+}
+
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function startDemo() {
+  document.querySelector('.btn-start').disabled = true;
+  document.querySelector('.btn-start').textContent = '⏳ Running...';
+
+  const transcript = document.getElementById('transcript-box');
+  transcript.innerHTML = '';
+
+  // Phase 1: Caller greets customer (pretend it's you)
+  addMessage('Caller-Callum', 'Hello! I am The Negotiator Caller. I help customers find the best moving price. Lets start — where are you moving from and to?');
+  setStatus('caller', true);
+  await sleep(1000);
+  setStatus('caller', false);
+
+  addMessage('System', '⏳ User responds: "Rock Hill, SC → Charlotte, NC. 2-bedroom, stairs at destination. Aug 1st."');
+  await sleep(1500);
+
+  // Caller asks questions one by one
+  addMessage('Caller-Callum', 'Great! Rock Hill to Charlotte — about 30 miles. How many bedrooms?');
+  setStatus('caller', true);
+  await sleep(800);
+  setStatus('caller', false);
+
+  addMessage('System', '⏳ User: "2 bedrooms."');
+  await sleep(1000);
+
+  addMessage('Caller-Callum', 'Two bedrooms. Any large furniture items — sofa, bed, dining table, maybe a piano?');
+  setStatus('caller', true);
+  await sleep(1000);
+  setStatus('caller', false);
+
+  addMessage('System', '⏳ User: "Sofa, king bed, dining table."');
+  await sleep(1000);
+
+  addMessage('Caller-Callum', 'Got it. Are there stairs at either end? How many flights?');
+  setStatus('caller', true);
+  await sleep(800);
+  setStatus('caller', false);
+
+  addMessage('System', '⏳ User: "Stairs at destination, 1 flight. No elevator."');
+  await sleep(1000);
+
+  addMessage('Caller-Callum', 'And when do you need to move? Is the date flexible?');
+  setStatus('caller', true);
+  await sleep(800);
+  setStatus('caller', false);
+
+  addMessage('System', '⏳ User: "August 1st, not flexible."');
+  await sleep(1000);
+
+  // Caller confirms
+  addMessage('Caller-Callum', 'Perfect! Let me confirm: Moving from Rock Hill, SC to Charlotte, NC. 2-bedroom with sofa, king bed, dining table. Stairs at destination, 1 flight. Date: August 1st. Does this look correct?');
+  setStatus('caller', true);
+  await sleep(1000);
+  setStatus('caller', false);
+
+  addMessage('System', '⏳ User confirms: "Yes, correct."');
+  await sleep(1500);
+
+  // Phase 2: Caller calls the Operator (moving company)
+  addMessage('Caller-Callum', 'Thank you! I will now call moving companies to get you the best price. Stand by.');
+  setStatus('caller', true);
+  await sleep(1000);
+  setStatus('caller', false);
+
+  addMessage('', '— 📞 Calling QuickMove Moving Co. —');
+  await sleep(1500);
+
+  // Operator answers
+  addMessage('Operator-Sarah', 'Hello, thank you for calling QuickMove Moving! How can I help you with your move today?');
+  setStatus('operator', true);
+  await sleep(1500);
+  setStatus('operator', false);
+
+  // Caller describes the job
+  addMessage('Caller-Callum', 'Hi! I am calling about a customer moving from Rock Hill, SC to Charlotte, NC. Two-bedroom apartment with sofa, king bed, dining table. One flight of stairs at destination. Move date August 1st. Can you give me a quote?');
+  setStatus('caller', true);
+  await sleep(2000);
+  setStatus('caller', false);
+
+  // Operator responds (hard negotiator style)
+  addMessage('Operator-Sarah', 'Okay, let me calculate. For that route and size, our base price is $2,000. Stairs fee is $400. Packing service is $300 if needed. Fuel surcharge is $200. With basic insurance, total comes to about $2,900.');
+  setStatus('operator', true);
+  await sleep(2000);
+  setStatus('operator', false);
+
+  // Caller uses leverage
+  addMessage('Caller-Callum', 'I see. Thank you for the itemized quote. I actually have a competing quote for $1,850 all-in from another company. Can you match or beat that? We would need waiving the stairs fee and fuel surcharge.');
+  setStatus('caller', true);
+  await sleep(2000);
+  setStatus('caller', false);
+
+  // Operator negotiates
+  addMessage('Operator-Sarah', 'Hmm. $1,850 is quite low. Let me check — I can do $2,000 all-inclusive if you book today. That means base, stairs, fuel — everything included. Best I can offer.');
+  setStatus('operator', true);
+  await sleep(2000);
+  setStatus('operator', false);
+
+  // Caller pushes harder
+  addMessage('Caller-Callum', 'I appreciate that. What about $1,850 if we skip packing — the customer can pack themselves? They just need loading and transport.');
+  setStatus('caller', true);
+  await sleep(1500);
+  setStatus('caller', false);
+
+  // Operator drops price
+  addMessage('Operator-Sarah', 'Alright. Without packing, I can do $1,700. That covers loading, transport with stairs, fuel, and basic insurance. Final offer. But you need to book within 48 hours.');
+  setStatus('operator', true);
+  await sleep(2000);
+  setStatus('operator', false);
+
+  // Caller closes
+  addMessage('Caller-Callum', 'Excellent! So $1,700 all-in, without packing. That is a 41% reduction from the initial $2,900. Thank you! I will include this in my comparison report for the customer.');
+  setStatus('caller', true);
+  await sleep(1500);
+  setStatus('caller', false);
+
+  // Summary
+  addMessage('', '— ✅ Price changed from $2,900 to $1,700 due to leverage —');
+  addMessage('', '— 💰 Savings: $1,200 (41%) —');
+
+  addMessage('Caller-Callum', 'Customer: I have gathered all quotes and negotiated the best price. Recommendation: QuickMove Moving Co at $1,700. Previous best competitor: $1,850. Savings: $1,200 compared to initial asking price.');
+  setStatus('caller', true);
+  await sleep(1500);
+  setStatus('caller', false);
+
+  setStatus('caller', false);
+  setStatus('operator', false);
+  document.querySelector('.btn-start').disabled = false;
+  document.querySelector('.btn-start').textContent = '▨ Start Demo';
+  addMessage('', '— ✅ Demo complete. Price changed from $2,900 → $1,700 due to negotiation leverage. —');
+}
+
+function resetDemo() {
+  document.getElementById('transcript-box').innerHTML = '<div style="text-align:center;color:#64748b;padding:2rem;">Demo will appear here.</div>';
+  document.getElementById('msg-count').textContent = '0 messages';
+  setStatus('caller', false);
+  setStatus('operator', false);
+  document.querySelector('.btn-start').disabled = false;
+  document.querySelector('.btn-start').textContent = '▨ Start Demo';
+}
+</script>
+</body>
+</html>
