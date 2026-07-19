@@ -116,53 +116,60 @@ const TAVILY_KEY = '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';
 let mode = 'demo';
 let companies = [];
 
-// Live transcript: read messages from overlay div (child 2) only
-let sheetObserver = null;
-let seenTranscripts = new Set();
+// Live transcript: ElevenLabs API polling
+const ELEVEN_KEY = 'sk_f06da02a7765833f4202bd7ee0d25117e64680b06028c9c6';
+let apiTimer = null;
+let watchedConvId = '';
+let displayedTurns = new Set();
 
 function startTranscriptCapture() {
-  if (sheetObserver) return;
-  seenTranscripts = new Set();
-  
-  sheetObserver = setInterval(() => {
+  watchedConvId = ''; displayedTurns = new Set();
+  if (apiTimer) clearInterval(apiTimer);
+  const idWatch = setInterval(() => {
     try {
       const root = document.querySelector('elevenlabs-convai')?.shadowRoot;
       if (!root) return;
-      // Find the overlay div (3rd child, contains actual conversation text)
-      const overlay = root.children[2];
-      if (!overlay || !overlay.className?.includes?.('overlay')) return;
-      const text = overlay.textContent || '';
-      if (!text) return;
-      
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
-      for (const line of lines) {
-        if (line.startsWith('How was') || line.startsWith('You ended') || 
-            line.startsWith('ID:') || line.startsWith('Talk to') ||
-            line.startsWith('Need help') || line.startsWith('Powered by') ||
-            line.startsWith('Feedback') || line.startsWith('Terms') ||
-            line.startsWith('By clicking') || line.startsWith('Agree') ||
-            line.startsWith('Consent') || line.startsWith('Privacy') ||
-            line === 'Start a call' || line === 'Message') continue;
-        const key = btoa(line).replace(/[+/=]/g,'').slice(-28);
-        if (seenTranscripts.has(key)) continue;
-        seenTranscripts.add(key);
-        const isUser = seenTranscripts.size % 2 === 0;
-        const speaker = isUser ? 'You (Sales Rep)' : 'AI Caller';
-        const cls = isUser ? 'customer' : 'caller';
-        const box = document.getElementById('chatBox');
-        const ph = box.querySelector('p');
-        if (ph && ph.style.padding) ph.remove();
-        const d = document.createElement('div'); d.className = 'message';
-        d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isUser?'♀':'♂')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(line)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
-        box.appendChild(d);
-        box.scrollTop = box.scrollHeight;
+      const t = (root.children[2]?.textContent || root.textContent || '');
+      const m = t.match(/conv_[a-z0-9]+/);
+      if (m && m[0] !== watchedConvId) {
+        watchedConvId = m[0]; clearInterval(idWatch);
+        apiTimer = setInterval(pollTranscript, 2000);
+        pollTranscript();
       }
-    } catch(e) { /* silent */ }
-  }, 800);
+    } catch(e) {}
+  }, 1000);
+}
+
+async function pollTranscript() {
+  if (!watchedConvId) return;
+  try {
+    const resp = await fetch('https://api.elevenlabs.io/v1/convai/conversations/' + watchedConvId, {
+      headers: {'xi-api-key': ELEVEN_KEY}
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const turns = data.transcript || [];
+    const box = document.getElementById('chatBox');
+    const ph = box.querySelector('p');
+    if (ph && ph.style.padding) ph.remove();
+    for (const t of turns) {
+      const msg = (t.message || '').trim();
+      if (!msg || msg.length < 2) continue;
+      const key = t.role + '_' + (t.time_in_call_secs || '0') + '_' + msg.slice(0, 25);
+      if (displayedTurns.has(key)) continue;
+      displayedTurns.add(key);
+      const isUser = t.role === 'user';
+      const speaker = isUser ? 'You (Sales Rep)' : 'AI Caller';
+      const cls = isUser ? 'customer' : 'caller';
+      const d = document.createElement('div'); d.className = 'message';
+      d.innerHTML = '<div class="msg-avatar '+cls+'">'+(isUser?'♀':'♂')+'</div><div class="msg-bubble"><div class="lb '+cls+'">'+speaker+'</div>'+escHtml(msg)+'<meta>'+new Date().toLocaleTimeString()+'</meta></div>';
+      box.appendChild(d); box.scrollTop = box.scrollHeight;
+    }
+  } catch(e) {}
 }
 
 function stopTranscriptCapture() {
-  if (sheetObserver) { clearInterval(sheetObserver); sheetObserver = null; }
+  if (apiTimer) { clearInterval(apiTimer); apiTimer = null; }
 }
 
 function escHtml(s) {
